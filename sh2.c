@@ -34,6 +34,7 @@ void mysys(char** exec)
 	pid_t pid=fork();
 	if(pid==0)
 	{
+		int redirect=0;
 		char filename[1024];
 		for(int i=0;exec[i];++i)
 			if(exec[i][0]=='>')
@@ -41,16 +42,20 @@ void mysys(char** exec)
 				strcpy(filename,exec[i]+1);
 				free(exec[i]);
 				exec[i]=NULL;
+				redirect=1;
+				break;
 			}
-		int fd=open(filename,O_CREAT|O_RDWR,0666);
-		dup2(fd,1);
-		close(fd);
+		if(redirect)
+		{
+			int fd=open(filename,O_CREAT|O_RDWR,0666);
+			dup2(fd,1);
+			close(fd);
+		}
 		if(execvp(exec[0],exec)<0)
 			perror("command not found");
 		exit(0);
 	}
-	else
-		wait(NULL);
+	wait(NULL);
 	return;
 }
 int main()
